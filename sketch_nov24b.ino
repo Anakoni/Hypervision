@@ -12,8 +12,8 @@ void setup()
 {
   Serial.begin(9600);
   
-  Serial.print("Simple TinyGPS library v. "); Serial.println(TinyGPS::library_version());
-  Serial.println("by Mikal Hart");
+  Serial.print("TinyGps v. "); Serial.println(TinyGPS::library_version());
+  Serial.println("Helios Marcel Callo");
   Serial.println();
 }
 
