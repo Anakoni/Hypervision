@@ -23,7 +23,8 @@ port.write('Test communication c++/NodeJS', function(err) {
 
 //needs debug
 port.on('readable', function () {
-  console.log('Data:', port.read())
+  let data = port.read()
+  console.log(data.toString())
 })
 
 // Open errors will be emitted as an error event
