@@ -36,6 +36,14 @@ port.on('readable', function () {
   console.log(data.toString())
 })
 
+//ratio + don't care + didn't ask
+let data = '{"Lat" : 47.65452412387142, "Long" : -2.0819485602849377}'
+ let gps = JSON.parse(data)
+
+ console.log("Latitude = " + gps.Lat)
+ console.log("Longitude = " + gps.Long)
+
+
 // Open errors will be emitted as an error event
 port.on('error', function(err) {
   console.log('Error: ', err.message)
