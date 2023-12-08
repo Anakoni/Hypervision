@@ -39,24 +39,13 @@ void loop()
   {
     float flat, flon;
     unsigned long age;
-    gps.f_get_position(&flat, &flon, &age);
-    Serial.print("LAT=");
+    gps.f_get_position(&flat, &flon);
+    Serial.print("\{\"Lat\" : ");
     Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
-    Serial.print(" LON=");
+    Serial.print(", \"Long\" : ");
     Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-    Serial.print(" SAT=");
-    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
-    Serial.print(" PREC=");
-    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
+    Serial.print("\}");
+    Serial.println("");
   }
   
-  gps.stats(&chars, &sentences, &failed);
-  Serial.print(" CHARS=");
-  Serial.print(chars);
-  Serial.print(" SENTENCES=");
-  Serial.print(sentences);
-  Serial.print(" CSUM ERR=");
-  Serial.println(failed);
-  if (chars == 0)
-    Serial.println("** No characters received from GPS: check wiring **");
 }
