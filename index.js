@@ -2,11 +2,13 @@ const sp = require('serialport');
 const express = require('express');
 var createInterface = require('readline').createInterface;
 var http = require('http').Server(express);
-var io = require('socket.io')(http);
-
-
-const app = express();
-
+const { createServer } = require('node:http');
+const { join } = require('node:path');
+const { Server } = require('socket.io');
+const { app, BrowserWindow } = require('electron')
+const appli = express();
+const server = createServer(appli);
+const socio = new Server(server);
 
 console.log(`
        ██████╗ ██████╗ ███████╗    ██╗  ██╗███████╗██╗     ██╗ ██████╗ ███████╗
@@ -36,11 +38,17 @@ var lineReader = createInterface({
   input: port
 });
 
+
 lineReader.on('line', function (line) {
   let gps = JSON.parse(line.toString())
-  let position = (gps.Lat, gps.Long)
+  let g1 = (`${gps.Lat}`).toString()
+  let g2 = (`${gps.Long}`).toString()
+  let position = (g1+ ", "+g2)
+  
+  //console.log(position);
 
-  io.emit('position', position);
+  socio.emit('position', { lat: g1, long: g2 });
+
 
 // Open errors will be emitted as an error event
 port.on('error', function(err) {
@@ -49,9 +57,30 @@ port.on('error', function(err) {
 
 });
 
-app.get('/', function(req, res) {
+appli.get('/', function(req, res) {
   res.sendFile(__dirname + '/main.html');
 });
-app.listen(5000, () => { 
+
+server.listen(5000, () => { 
   console.log('App listening on port 5000'); 
 }); 
+
+const createWindow = () => {
+  const win = new BrowserWindow({
+    width: 800,
+    height: 600
+  })
+
+  win.loadURL('http://localhost:5000')
+
+}
+
+app.whenReady().then(() => {
+  createWindow()
+  
+  
+});
+
+
+
+

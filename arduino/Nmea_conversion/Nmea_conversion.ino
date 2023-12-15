@@ -11,10 +11,6 @@ TinyGPS gps;
 void setup()
 {
   Serial.begin(9600);
-  
-  Serial.print("TinyGps v. "); Serial.println(TinyGPS::library_version());
-  Serial.println("Helios Marcel Callo");
-  Serial.println();
 }
 
 void loop()
