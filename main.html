@@ -46,8 +46,10 @@ var circle = L.circleMarker([0,0], {
 socket.on('position', function(data) {
     lat = data.lat
     long = data.long
+	prec = data.prec
     map.setView([lat, long], 19)
     circle.setLatLng([lat, long])
+	circle.setRadius(prec)
   });
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

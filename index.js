@@ -43,11 +43,12 @@ lineReader.on('line', function (line) {
   let gps = JSON.parse(line.toString())
   let g1 = (`${gps.Lat}`).toString()
   let g2 = (`${gps.Long}`).toString()
-  let position = (g1+ ", "+g2)
+  let g3 = (`${gps.Prec}`).toString()
+  let position = (g1+ ", "+ g2 + ", "+g3)
   
   //console.log(position);
 
-  socio.emit('position', { lat: g1, long: g2 });
+  socio.emit('position', { lat: g1, long: g2, prec: g3 });
 
 
 // Open errors will be emitted as an error event
