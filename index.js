@@ -9,6 +9,7 @@ const { app, BrowserWindow } = require('electron')
 const appli = express();
 const server = createServer(appli);
 const socio = new Server(server);
+const nmea = require("nmea-simple");
 
 console.log(`
        ██████╗ ██████╗ ███████╗    ██╗  ██╗███████╗██╗     ██╗ ██████╗ ███████╗
@@ -27,8 +28,8 @@ sp.SerialPort.list().then (
 
 //open serial port
 const port = new sp.SerialPort({
-  path: 'COM3',
-  baudRate: 9600,
+  path: "COM6",
+  baudRate: 38400,
   autoOpen: true,
 })
 
@@ -40,16 +41,13 @@ var lineReader = createInterface({
 
 
 lineReader.on('line', function (line) {
-  let gps = JSON.parse(line.toString())
-  let g1 = (`${gps.Lat}`).toString()
-  let g2 = (`${gps.Long}`).toString()
-  let g3 = (`${gps.Prec}`).toString()
-  let position = (g1+ ", "+ g2 + ", "+g3)
-  
-  //console.log(position);
+  const packet = nmea.parseNmeaSentence(line);
 
-  socio.emit('position', { lat: g1, long: g2, prec: g3 });
 
+        if (packet.sentenceId === "GGA" && packet.fixType !== "none") {
+            console.log("Got location via GGA packet:", packet.latitude, packet.longitude);
+        }
+        socio.emit('position', { lat: packet.latitude, long: packet.longitude});
 
 // Open errors will be emitted as an error event
 port.on('error', function(err) {
@@ -63,6 +61,7 @@ appli.get('/', function(req, res) {
 });
 
 server.listen(5000, () => { 
+
   console.log('App listening on port 5000'); 
 }); 
 
@@ -75,6 +74,7 @@ const createWindow = () => {
   win.loadURL('http://localhost:5000')
 
 }
+
 
 app.whenReady().then(() => {
   createWindow()

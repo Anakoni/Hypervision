@@ -49,7 +49,7 @@ socket.on('position', function(data) {
 	prec = data.prec
     map.setView([lat, long], 19)
     circle.setLatLng([lat, long])
-	circle.setRadius(prec)
+	circle.setRadius(20)
   });
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

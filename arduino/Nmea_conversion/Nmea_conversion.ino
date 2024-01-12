@@ -6,7 +6,7 @@ TinyGPS gps;
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(38400);
 }
 
 void loop()
@@ -20,13 +20,13 @@ void loop()
     while (Serial.available())
     {
       char c = Serial.read();
-      // Serial.write(c); 
+      Serial.write(c); 
       if (gps.encode(c)) 
         newData = true;
     }
   }
 
-  if (newData)
+  if (false)
   {
     float flat, flon;
     unsigned long age;
@@ -35,9 +35,9 @@ void loop()
     Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
     Serial.print(", \"Long\" : ");
     Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-	Serial.print(", \"Prec\" : ");
+	 Serial.print(", \"Prec\" : ");
     Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
-	Serial.print("\}");
+	 Serial.print("\}");
     Serial.println("");
   }
   
