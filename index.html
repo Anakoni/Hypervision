@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="index.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <title>Helios_GPS</title>
+  </head>
+  <body>
+    <img src="src/Logo_White.png" width="289" height="109">
+
+    <button id="clickme">Scan COM</button>
+    <button id="launch">launch</button>
+    
+
+    <select required id="mySelect">
+    <option value="" disabled selected hidden>COM</option>
+    </select>
+
+    <style>
+      select:invalid { color: gray; }
+      </style>
+      <select required id ="rate">
+          <option value="" disabled selected hidden>Baud Rate</option>
+          <option >115200</option>
+          <option >38400</option>
+          <option >9600</option>
+      </select>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

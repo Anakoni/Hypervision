@@ -1,32 +1,29 @@
-function getDeviceDetails (device) {
-  return device.productName || `Unknown device ${device.deviceId}`
+const { ipcMain, ipcRenderer } = require('electron');
+const sp = require('serialport')
+
+
+
+function reset() {
+  document.getElementById('mySelect').innerText = null;
 }
 
-async function testIt () {
-  const noDevicesFoundMsg = 'No devices found'
-  const grantedDevices = await navigator.usb.getDevices()
-  let grantedDeviceList = ''
-  if (grantedDevices.length > 0) {
-    for (const device of grantedDevices) {
-      grantedDeviceList += `<hr>${getDeviceDetails(device)}</hr>`
-    }
-  } else {
-    grantedDeviceList = noDevicesFoundMsg
-  }
-  document.getElementById('granted-devices').innerHTML = grantedDeviceList
-
-  grantedDeviceList = ''
-  try {
-    const grantedDevice = await navigator.usb.requestDevice({
-      filters: []
-    })
-    grantedDeviceList += `<hr>${getDeviceDetails(grantedDevice)}</hr>`
-  } catch (ex) {
-    if (ex.name === 'NotFoundError') {
-      grantedDeviceList = noDevicesFoundMsg
-    }
-  }
-  document.getElementById('granted-devices2').innerHTML = grantedDeviceList
+async function listSerialPorts() {
+  var x = document.getElementById("mySelect");
+  var option = document.createElement("option");
+  reset()
+  await sp.SerialPort.list().then (
+    ports => ports.forEach(port => option.text = port.path),
+    err => console.log(err),
+    x.add(option)
+  )
 }
 
-document.getElementById('clickme').addEventListener('click', testIt)
+  function launch() {
+    var com = document.getElementById("mySelect").value;
+    var baud = document.getElementById("rate").value;
+    ipcRenderer.send('launch', `${com}`, `${baud}`)
+}
+
+document.getElementById('clickme').addEventListener('click', listSerialPorts)
+document.getElementById('launch').addEventListener('click', launch)
+

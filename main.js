@@ -1,74 +1,116 @@
-const { app, BrowserWindow } = require('electron/main')
+const { app, BrowserWindow, ipcMain } = require('electron')
+const sp = require('serialport')
+const path = require('path')
+const url = require('url')
+const express = require('express');
+var http = require('http').Server(express);
+const { createServer } = require('node:http');
+const { Server } = require('socket.io');
+const { Console } = require('console');
+var createInterface = require('readline').createInterface;
+const { join } = require('node:path');
+const appli = express();
+const server = createServer(appli);
+const socio = new Server(server);
+const nmea = require("nmea-simple");
 
-function createWindow () {
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600
-  })
+// Keep a global reference of the window object, if you don't, the window will
+// be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
 
-  let grantedDeviceThroughPermHandler
-
-  mainWindow.webContents.session.on('select-usb-device', (event, details, callback) => {
-    // Add events to handle devices being added or removed before the callback on
-    // `select-usb-device` is called.
-    mainWindow.webContents.session.on('usb-device-added', (event, device) => {
-      console.log('usb-device-added FIRED WITH', device)
-      // Optionally update details.deviceList
+function createWindow() {
+    // Create the browser window.
+    mainWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        webPreferences: {
+            nodeIntegration: true, // to allow require
+            contextIsolation: false, // allow use with Electron 12+
+            preload: path.join(__dirname, 'preload.js')
+        }
     })
 
-    mainWindow.webContents.session.on('usb-device-removed', (event, device) => {
-      console.log('usb-device-removed FIRED WITH', device)
-      // Optionally update details.deviceList
+    // and load the index.html of the app.
+    mainWindow.loadURL(url.format({
+        pathname: path.join(__dirname, 'index.html'),
+        protocol: 'file:',
+        slashes: true
+    }))
+
+    
+    // Emitted when the window is closed.
+    mainWindow.on('closed', function() {
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
+        mainWindow = null
     })
-
-    event.preventDefault()
-    if (details.deviceList && details.deviceList.length > 0) {
-      const deviceToReturn = details.deviceList.find((device) => {
-        return !grantedDeviceThroughPermHandler || (device.deviceId !== grantedDeviceThroughPermHandler.deviceId)
-      })
-      if (deviceToReturn) {
-        callback(deviceToReturn.deviceId)
-      } else {
-        callback()
-      }
-    }
-  })
-
-  mainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
-    if (permission === 'usb' && details.securityOrigin === 'file:///') {
-      return true
-    }
-  })
-
-  mainWindow.webContents.session.setDevicePermissionHandler((details) => {
-    if (details.deviceType === 'usb' && details.origin === 'file://') {
-      if (!grantedDeviceThroughPermHandler) {
-        grantedDeviceThroughPermHandler = details.device
-        return true
-      } else {
-        return false
-      }
-    }
-  })
-
-  mainWindow.webContents.session.setUSBProtectedClassesHandler((details) => {
-    return details.protectedClasses.filter((usbClass) => {
-      // Exclude classes except for audio classes
-      return usbClass.indexOf('audio') === -1
-    })
-  })
-
-  mainWindow.loadFile('login.html')
 }
 
-app.whenReady().then(() => {
-  createWindow()
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow)
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
+// Quit when all windows are closed.
+app.on('window-all-closed', function() {
+    // On OS X it is common for applications and their menu bar
+    // to stay active until the user quits explicitly with Cmd + Q
+    app.quit()
 })
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit()
+app.on('activate', function() {
+    // On OS X it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (mainWindow === null) {
+        createWindow()
+    }
+})
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and require them here.
+function launch(com, rate)
+ {
+  console.log(rate)
+  const port = new sp.SerialPort({
+    path: com,
+    baudRate: Math.floor(rate),
+  })
+  var lineReader = createInterface({
+    input: port
+  });
+  
+  
+  lineReader.on('line', function (line) {
+    const packet = nmea.parseNmeaSentence(line);
+  
+  
+          if (packet.sentenceId === "GGA" && packet.fixType !== "none") {
+              console.log("Got location via GGA packet:", packet.latitude, packet.longitude);
+          }
+          socio.emit('position', { lat: packet.latitude, long: packet.longitude});
+  
+  // Open errors will be emitted as an error event
+  port.on('error', function(err) {
+    console.log('Error: ', err.message)
+  })
+  
+  });
+
+
+  appli.get('/', function(req, res) {
+    res.sendFile(__dirname + '/gps.html');
+  });
+  
+  server.listen(5000, () => { 
+  
+    console.log('App listening on port 5000'); 
+  })
+
+
+  mainWindow.loadURL("http://localhost:5000")
+}
+
+ipcMain.on('launch', (event, com, rate) => {
+  launch(com, rate)
 })
